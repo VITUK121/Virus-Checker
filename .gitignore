@@ -1,0 +1,45 @@
+# ========================
+# 1. Secrets and configs (CRITICAL)
+# ========================
+.env
+.env.*
+*.pem
+*.key
+
+# ========================
+# 2. User Files(VirusChecker)
+# ========================
+/api/uploads/
+/worker-clamav/uploads/
+uploads/
+shared-files/
+
+# ========================
+# 3. Node.js & NestJS (API)
+# ========================
+node_modules/
+npm-debug.log
+yarn-error.log
+dist/
+build/
+.nestjs/
+
+# ========================
+# 4. Python (ClamAV Worker)
+# ========================
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+env/
+pip-log.txt
+
+# ========================
+# 5. IDE and OS
+# ========================
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db

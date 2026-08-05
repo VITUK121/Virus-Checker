@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VirusChecker</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="bento-container">
+        <header class="bento-item header">
+            <h1>🛡️ VirusChecker</h1>
+            <p>Безпечна перевірка файлів на наявність загроз</p>
+        </header>
+
+        <main class="bento-item upload-section">
+            <input type="file" id="fileInput" class="file-input">
+            <button id="uploadBtn" class="upload-btn">Перевірити файл</button>
+            <div id="uploadStatus" class="status"></div>
+        </main>
+
+        <aside class="bento-item result-section">
+            <h2>Результати сканування</h2>
+            <div id="results">Очікування файлу...</div>
+        </aside>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>
