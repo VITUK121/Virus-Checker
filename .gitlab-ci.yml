@@ -79,6 +79,9 @@ deploy_to_server:
     # 3. Login in server and running a script
     - |
         cd ${DEPLOY_FOLDER} &&
+        echo "CI_REGISTRY_IMAGE=${CI_REGISTRY_IMAGE}" > .env &&
+        echo "RABBITMQ_URL=${RABBITMQ_URL}" >> .env &&
+        echo "SHARED_FILES_PATH=${SHARED_FILES_PATH}" >> .env &&
         echo "${CI_REGISTRY_PASSWORD}" | docker login ${CI_REGISTRY} -u "${CI_REGISTRY_USER}" --password-stdin &&
         docker compose pull &&
         docker compose up -d --remove-orphans &&
