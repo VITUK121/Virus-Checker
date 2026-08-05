@@ -16,7 +16,7 @@ document.getElementById('uploadBtn').addEventListener('click', async () => {
 
     try {
         // Звертаємося до NestJS API (порт 3000 в docker-compose)
-        const response = await fetch('http://${window.location.hostname}:3000/scan', {
+        const response = await fetch(`http://${window.location.hostname}:3000/scan`, {
             method: 'POST',
             body: formData
         });
