@@ -28,11 +28,19 @@ def callback(ch, method, properties, body):
     ch.basic_ack(delivery_tag=method.delivery_tag)
 
 def main():
-    connection = pika.BlockingConnection(pika.URLParameters(RABBITMQ_URL))
+    # Парсимо URL з оточення
+    parameters = pika.URLParameters(RABBITMQ_URL)
+    
+    # Вимикаємо heartbeats (значення 0), щоб сканування великих файлів 
+    # не призводило до розриву з'єднання
+    parameters.heartbeat = 0 
+    
+    connection = pika.BlockingConnection(parameters)
     channel = connection.channel()
     channel.queue_declare(queue='scan_queue', durable=True)
     
     print(' [*] Очікування завдань. Для виходу натисніть CTRL+C')
+    # prefetch_count=1 гарантує, що воркер бере лише 1 файл за раз
     channel.basic_qos(prefetch_count=1)
     channel.basic_consume(queue='scan_queue', on_message_callback=callback)
     channel.start_consuming()
