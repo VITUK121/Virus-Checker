@@ -1,0 +1,74 @@
+version: '3.8'
+
+services:
+  web:
+    image: nginx:alpine
+    container_name: vc-web
+    ports:
+      - "80:80"
+    volumes:
+      - ./web:${FRONTEND_PATH}:ro
+    depends_on:
+      - api
+    networks:
+      - frontend_net
+
+  api:
+    build: 
+      context: ./api
+      dockerfile: Dockerfile
+    container_name: vc-api
+    ports:
+      - "3000:3000"
+    environment:
+      - RABBITMQ_URL=${RABBITMQ_URL}
+    volumes:
+      - shared-files:${SHARED_FILES_PATH}:rw
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - frontend_net
+      - backend_net
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: vc-rabbitmq
+    ports:
+      - "15672:15672"
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - backend_net
+
+  clamav-worker:
+    build:
+      context: ./worker-clamav
+      dockerfile: Dockerfile
+    container_name: vc-worker-clamav
+    environment:
+      - RABBITMQ_URL=${RABBITMQ_URL}
+    volumes:
+      - shared-files:${SHARED_FILES_PATH}:ro
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - backend_net
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 512M
+
+volumes:
+  shared-files:
+
+networks:
+  frontend_net:
+    driver: bridge
+  backend_net:
+    driver: bridge

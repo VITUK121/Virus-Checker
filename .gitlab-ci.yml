@@ -1,0 +1,89 @@
+# You can override the included template(s) by including variable overrides
+# SAST customization: https://docs.gitlab.com/user/application_security/sast/#available-cicd-variables
+# Secret Detection customization: https://docs.gitlab.com/user/application_security/secret_detection/pipeline/configure/
+# Dependency Scanning customization: https://docs.gitlab.com/user/application_security/dependency_scanning/dependency_scanning_sbom/#customizing-analyzer-behavior
+# Container Scanning customization: https://docs.gitlab.com/user/application_security/container_scanning/#customizing-analyzer-behavior
+# Note that environment variables can be set in several places
+# See https://docs.gitlab.com/ci/variables/#cicd-variable-precedence
+stages:
+  - test
+  - secret-detection
+  - build
+  - deploy
+
+sast:
+  stage: test
+
+include:
+  - template: Security/SAST.gitlab-ci.yml
+  - template: Security/Secret-Detection.gitlab-ci.yml
+
+variables:
+  SECRET_DETECTION_ENABLED: "true"
+
+secret_detection:
+  stage: secret-detection
+  allow_failure: false
+
+image-build:
+  stage: build
+  image: docker:24.0.5-cli
+  services:
+    - docker:24.0.5-dind
+  before_script:
+    - echo "Log in to GitLab Container Registry..."
+    - docker login -u ${CI_REGISTRY_USER} -p ${CI_REGISTRY_PASSWORD} ${CI_REGISTRY}
+  script:
+    - echo "Starting Building Stage"
+
+    # 1. API Build
+    - docker build -t ${CI_REGISTRY_IMAGE}/api:${CI_COMMIT_SHORT_SHA} -t ${CI_REGISTRY_IMAGE}/api:latest ./api
+    
+    # 2.ClamAV Build
+    - docker build -t ${CI_REGISTRY_IMAGE}/worker-clamav:${CI_COMMIT_SHORT_SHA} -t ${CI_REGISTRY_IMAGE}/worker-clamav:latest ./worker-clamav
+    
+    # 3. Web Build
+    - docker build -t ${CI_REGISTRY_IMAGE}/web:${CI_COMMIT_SHORT_SHA} -t ${CI_REGISTRY_IMAGE}/web:latest ./web
+
+    - echo "Sending Images to GitLab Registry..."
+
+    # Sending API
+    - docker push ${CI_REGISTRY_IMAGE}/api:${CI_COMMIT_SHORT_SHA}
+    - docker push ${CI_REGISTRY_IMAGE}/api:latest
+    
+    # Sending Worker
+    - docker push ${CI_REGISTRY_IMAGE}/worker-clamav:${CI_COMMIT_SHORT_SHA}
+    - docker push ${CI_REGISTRY_IMAGE}/worker-clamav:latest
+    
+    # Sending Web
+    - docker push ${CI_REGISTRY_IMAGE}/web:${CI_COMMIT_SHORT_SHA}
+    - docker push ${CI_REGISTRY_IMAGE}/web:latest
+
+    - echo "Build Finished"
+  only:
+    - main
+
+deploy_to_server:
+  stage: deploy
+  tags:
+    - on-premise
+  script:
+    - echo "Starting Deploy Stage"
+    
+    # Creating folder on a server (if not exists)
+    - mkdir -p ${DEPLOY_FOLDER}
+    
+    # 2. Copying docker-compose.yml to a server
+    - cp docker-compose.prod.yml ${DEPLOY_FOLDER}/docker-compose.yml
+    
+    # 3. Login in server and running a script
+    - |
+        cd ${DEPLOY_FOLDER} &&
+        echo "${CI_REGISTRY_PASSWORD}" | docker login ${CI_REGISTRY} -u "${CI_REGISTRY_USER}" --password-stdin &&
+        docker compose pull &&
+        docker compose up -d --remove-orphans &&
+        docker image prune -f
+      
+    - echo "Deploy Finished"
+  only:
+    - main
