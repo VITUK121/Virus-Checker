@@ -1,8 +1,12 @@
 import {
   Controller,
   Post,
+  Get,
+  Param,
   UseInterceptors,
   UploadedFile,
+  BadRequestException,
+  NotFoundException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { AppService } from './app.service';
@@ -28,13 +32,32 @@ export class AppController {
       }),
     }),
   )
-  uploadFile(@UploadedFile() file: Express.Multer.File) {
-    // Відправляємо завдання в чергу RabbitMQ
-    const taskId = this.appService.publishToQueue(file.filename);
+  uploadFile(@UploadedFile() file?: Express.Multer.File) {
+    if (!file) {
+      throw new BadRequestException('No file uploaded');
+    }
+
+    const result = this.appService.processUploadedFile(
+      file.path,
+      file.filename,
+      file.originalname,
+    );
+
     return {
-      message: 'Файл прийнято',
-      taskId: taskId,
-      filename: file.originalname,
+      message: result.isCached
+        ? 'Результат знайдено в кеші (миттєва відповідь)'
+        : 'Файл прийнято на перевірку',
+      ...result,
     };
   }
+
+  @Get('scan/status/:taskId')
+  getStatus(@Param('taskId') taskId: string) {
+    const task = this.appService.getTaskStatus(taskId);
+    if (!task) {
+      throw new NotFoundException(`Task with ID ${taskId} not found`);
+    }
+    return task;
+  }
 }
+
