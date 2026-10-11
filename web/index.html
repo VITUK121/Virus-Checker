@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VirusChecker - ClamAV Antivirus Scanner</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="app-container">
+        <header class="app-header">
+            <div class="logo-badge">🛡️</div>
+            <h1>VirusChecker</h1>
+            <p class="subtitle">Перевірка файлів на наявність загроз у реальному часі через ClamAV</p>
+        </header>
+
+        <div class="main-grid">
+            <!-- Upload Panel -->
+            <section class="card upload-card">
+                <h2>Завантажити файл</h2>
+                <div class="drop-zone" id="dropZone">
+                    <input type="file" id="fileInput" class="file-input">
+                    <div class="drop-zone-content">
+                        <div class="upload-icon">📁</div>
+                        <p class="drop-text" id="dropText">Перетягніть файл сюди або <span>оберіть з пристрою</span></p>
+                        <p class="file-selected" id="fileSelectedName"></p>
+                    </div>
+                </div>
+
+                <button id="uploadBtn" class="primary-btn" disabled>
+                    <span>Запустити сканування</span>
+                </button>
+                <div id="uploadStatus" class="status-msg"></div>
+            </section>
+
+            <!-- Results Panel -->
+            <section class="card results-card">
+                <h2>Результати сканування</h2>
+                <div id="resultsContainer" class="results-container">
+                    <div class="empty-state" id="emptyState">
+                        <div class="empty-icon">🔍</div>
+                        <p>Оберіть та надішліть файл для отримання детального звіту безпеки.</p>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
